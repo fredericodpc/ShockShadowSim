@@ -169,8 +169,11 @@ def nonlinear_ray_trace(photonMapDict, initialState):
 # ------------------------------------------------------------------------ #
 # CFD Mesh and Data
 # ------------------------------------------------------------------------ #
-cwd = os.getcwd()
-os.chdir(cwd + "\onera_solution")
+src  = os.getcwd()
+
+os.chdir("..")
+home = os.getcwd()
+os.chdir(home + "\onera_solution")
 
 # CFD volume solution and mesh loading
 fileName = 'flow.vtu'
@@ -190,7 +193,7 @@ uGrid = vtk.vtkUnstructuredGrid()
 uGrid.ShallowCopy(appendFilter.GetOutput())
 wingMesh.grid = pv.UnstructuredGrid(uGrid)
 
-os.chdir(cwd)
+os.chdir(src)
 
 # ------------------------------------------------------------------------ #
 # Mesh auxiliaries
@@ -310,7 +313,11 @@ for i in range(light.photonsOrg.shape[0]):
 # ------------------------------------------------------------------------ #
 # Save illumination photon map
 # ------------------------------------------------------------------------ #
-cwd         = os.getcwd()
+src  = os.getcwd()
+
+os.chdir("..")
+home = os.getcwd()
+
 simPath     = '.\simulation_results'
 illumPath   = '.\elevation_' + str(lsElevation) + '_azimuth_' + str(lsAzimuth) + '_range_' +  str(lsRange)
 
@@ -327,7 +334,7 @@ if (os.path.isdir(illumPath) == False):
             
     writer = DataManager.DataManager(fileName)
     writer.write_vtp(light.photonMap)
-    os.chdir(cwd)        
+    os.chdir(home)        
 elif (os.path.isdir(illumPath) == True):
     os.chdir(illumPath)
         
@@ -343,7 +350,7 @@ elif (os.path.isdir(illumPath) == True):
         writer.write_vtp(light.photonMap)
     
     
-os.chdir(cwd)
+os.chdir(home)
 # ------------------------------------------------------------------------ #
 
 
