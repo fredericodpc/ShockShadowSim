@@ -208,7 +208,7 @@ wingMesh.build_obb_tree()
 light = Light.Light()
 
 # Number of photons
-lsNumOfPhotons    = 1000
+lsNumOfPhotons    = 100
 light.set_number_of_photons(lsNumOfPhotons)
 
 # Position and Direction
@@ -233,7 +233,6 @@ fluidMesh.compute_index_of_refraction(light.GDC)
 # ------------------------------------------------------------------------ #
 # Cell gradient computation
 # ------------------------------------------------------------------------ #
-gradYN = 1
 fluidMesh.compute_cell_gradient()
 
 # ------------------------------------------------------------------------ #
@@ -307,31 +306,31 @@ for i in range(light.photonsOrg.shape[0]):
         # Nonlinear Ray Trace
         initialState    = (light.photonsOrg[i,0], light.photonsOrg[i,1], light.photonsOrg[i,2], light.photonsDir[i,0], light.photonsDir[i,1], light.photonsDir[i,2])
         nonlinear_ray_trace(photonMapDict, initialState)
-pdb.set_trace()
+
 # ------------------------------------------------------------------------ #
 # Save illumination photon map
 # ------------------------------------------------------------------------ #
 cwd         = os.getcwd()
-simPath = '.\sim_results'
+simPath     = '.\simulation_results'
+illumPath   = '.\elevation_' + str(lsElevation) + '_azimuth_' + str(lsAzimuth) + '_range_' +  str(lsRange)
+
+if (os.path.isdir(simPath) == False):
+    os.mkdir(simPath)
+    
 os.chdir(simPath)
 
-illumPath = '.\elevation_' + str(sunElevation) + '_azimuth_' + str(sunAzimuth) + '_range_' +  str(sunRange)
-if gradYN == 1:
-    fileName    = 'm6_frt_flow_'  + str(light.photonsOrg.shape[0]) + '_photons.vtp'
-elif gradYN == 0:
-    fileName    = 'm6_frt_noflow_'  + str(light.photonsOrg.shape[0]) + '_photons.vtp'
+fileName    = 'oneraM6_'  + str(lsElevation) + '_ele_' + str(lsAzimuth) + '_azi_' + str(light.photonsOrg.shape[0]) + '_photons.vtp'
 
 if (os.path.isdir(illumPath) == False):
     os.mkdir(illumPath)
     os.chdir(illumPath)
-        
-    writer      = DataManager.DataManager(fileName)
+            
+    writer = DataManager.DataManager(fileName)
     writer.write_vtp(light.photonMap)
-    os.chdir(cwd)
-    
+    os.chdir(cwd)        
 elif (os.path.isdir(illumPath) == True):
     os.chdir(illumPath)
-    
+        
     if (os.path.exists(fileName) == True):
         overwriteCheck = input("Overwrite existing results? (Y/N)")
         if (overwriteCheck.lower() == 'y'):
@@ -342,6 +341,7 @@ elif (os.path.isdir(illumPath) == True):
     elif (os.path.exists(fileName) == False):
         writer      = DataManager.DataManager(fileName)
         writer.write_vtp(light.photonMap)
+    
     
 os.chdir(cwd)
 # ------------------------------------------------------------------------ #
