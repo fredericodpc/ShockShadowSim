@@ -1,60 +1,52 @@
-import pyvista as pv
-import numpy as np
-import scipy.integrate as integrate
-import scipy.interpolate as interpolate
-from scipy import signal
+# Import external libraries
+import pyvista              as pv
+import numpy                as np
+import scipy.integrate      as integrate
+import scipy.interpolate    as interpolate
+from scipy                  import signal
 import vtk
 import pdb
 import math
 
-
+# Import classes
 import Mesh
 
 class Light():
+# ------------------------------------------------------------------------ #
+# Class constructor
+# ------------------------------------------------------------------------ #  
     def __init__(self):
         self.photonMap      = pv.PolyData()
         self.totalPower     = 0
         self.numOfPhotons   = 0
         self.GDC            = 0.0002256
         
-    def hene_laser_spectral_power(self, wavelength):
-        samples     = 1000
-        laserWL     = 632.8
-        laserPOW    = 4*(10**-3)
-        
-        spectralPowerDistribution   = signal.gaussian(samples, std=1)*laserPOW
-        spectrum                    = np.linspace(1,2*laserWL,samples) 
-
-        spd = interpolate.interp1d(spectrum, spectralPowerDistribution)
-        spectralPower = spd(wavelength)
-        
-        return spectralPower
-
+# ------------------------------------------------------------------------ #
+# Light source spectral power distribution
+# ------------------------------------------------------------------------ #          
     def sun_spectral_irradiance(self, wavelength):
         # nm to mum
         wavelength = wavelength*(10**-3)
         
         # Sun's color temperature
         T = 5777
+        # Mean Sun-Earth distance
+        r0 = 149547890000 # [m]
+        # Mean radius of the solar disk
+        rS = 6.9598*(10**8)
+        
         # # Planck's constant [W.s^2]
         # h  = 6.6260693*(10**-34)
         # # speed of light in vacuum [m/s]
         # c  = 2.99792458*(10**8)
         # # Boltzmann's constant [J/K]
         # k  = 1.380658*(10**-23)
-        # # First radiation constant
-        # C1 = 2*np.pi*h*(c**2)
-        # # Second radiation constant
-        # C2 = h*c/k
-        
-        
-        # Mean Sun-Earth distance
-        r0 = 149547890000 # [m]
-        # Mean radius of the solar disk
-        rS = 6.9598*(10**8)
-        
+        # First radiation constant
         C1 = 3.7427*(10**8) # [W mum^4 m^-2]
+        # C1 = 2*np.pi*h*(c**2)
+        # Second radiation constant
         C2 = 1.4388*(10**4) # [mum K]
+        # C2 = h*c/k
         
         num = C1
         den = (wavelength**5)*(np.exp(C2/(wavelength*T))-1)
@@ -67,8 +59,9 @@ class Light():
         
         return spectralPower
         
-        
-        
+# ------------------------------------------------------------------------ #
+# XYZ color matching functions
+# ------------------------------------------------------------------------ #           
     def get_x_color_matching_function(self, wavelength):
         wl = wavelength
         #gamma      beta             delta
@@ -106,33 +99,34 @@ class Light():
         
         z = z0 + z1
         return(z)
-        
-        
-        
+# ------------------------------------------------------------------------ #
+# XYZ to sRGB color space conversion
+# ------------------------------------------------------------------------ #                   
     def set_total_rgb_power(self, type='sun', lambdaLow=380, lambdaHigh=800, lambdaDisc=10):
-        irradiance_function_name = type + '_spectral_irradiance'
-        irradiance_function = getattr(self, irradiance_function_name)
+        irradiance_function_name    = type + '_spectral_irradiance'
+        irradiance_function         = getattr(self, irradiance_function_name)
         
-        wavelength          = np.linspace(int(lambdaLow), int(lambdaHigh), int((lambdaHigh-lambdaLow)/lambdaDisc))
-        spectralPower       = np.zeros((wavelength.shape[0]))
-        spectralX           = np.zeros((wavelength.shape[0]))
-        spectralY           = np.zeros((wavelength.shape[0]))
-        spectralZ           = np.zeros((wavelength.shape[0]))
+        wavelength                  = np.linspace(int(lambdaLow), int(lambdaHigh), int((lambdaHigh-lambdaLow)/lambdaDisc))
+        spectralPower               = np.zeros((wavelength.shape[0]))
+        spectralX                   = np.zeros((wavelength.shape[0]))
+        spectralY                   = np.zeros((wavelength.shape[0]))
+        spectralZ                   = np.zeros((wavelength.shape[0]))
         for i in range(0, wavelength.shape[0]):
-            spectralPower[i] = irradiance_function(wavelength[i])
-            spectralX[i]     = self.get_x_color_matching_function(wavelength[i])
-            spectralY[i]     = self.get_y_color_matching_function(wavelength[i])
-            spectralZ[i]     = self.get_z_color_matching_function(wavelength[i])
+            spectralPower[i]        = irradiance_function(wavelength[i])
+            spectralX[i]            = self.get_x_color_matching_function(wavelength[i])
+            spectralY[i]            = self.get_y_color_matching_function(wavelength[i])
+            spectralZ[i]            = self.get_z_color_matching_function(wavelength[i])
             
         xPower      = integrate.simps(spectralPower*spectralX, wavelength)
         yPower      = integrate.simps(spectralPower*spectralY, wavelength)
         zPower      = integrate.simps(spectralPower*spectralZ, wavelength)
         xyzPower    = np.array([xPower, yPower, zPower])
 
-        xyz2srgb = np.array([[3.2405, -1.5371, -0.4985], [-0.9693, 1.8706, 0.0416], [0.0556, -0.2040, 1.0572]])
+        xyz2srgb    = np.array([[3.2405, -1.5371, -0.4985], [-0.9693, 1.8706, 0.0416], [0.0556, -0.2040, 1.0572]])
         # xyz2rgb = np.array([[2.5623, -1.1661, -0.3962], [-1.0215, 1.9778, 0.0437], [0.0725, -0.2562, 1.1810]])
 
         rgbPower = np.matmul(xyz2srgb, xyzPower)*self.areaOfProj
+        
         # clamp to zero
         for c in range(0, 3):
             if (rgbPower[c]<0.0):
@@ -140,18 +134,9 @@ class Light():
         
         self.totalPower = rgbPower
         
-    def set_total_power(self, type='sun', lambdaLow=380, lambdaHigh=800, lambdaDisc=10):
-        
-        power_function_name = type + '_spectral_power'
-        power_function = getattr(self, power_function_name)
-        
-        wavelength          = np.linspace(int(lambdaLow), int(lambdaHigh), int((lambdaHigh-lambdaLow)/lambdaDisc))
-        spectralPower       = np.zeros((wavelength.shape[0]))
-        for i in range(0, wavelength.shape[0]):
-            spectralPower[i] = power_function(wavelength[i])
-        
-        self.totalPower = integrate.simps(spectralPower, wavelength)
-
+# ------------------------------------------------------------------------ #
+# Gladstone-Dale constant linear interpolation from tabulated spectral data
+# ------------------------------------------------------------------------ #  
     def set_gladstone_dale_constant(self, lambdaLow=380, lambdaHigh=800, lambdaDisc=10):
         K           = np.array([0.2239, 0.2250, 0.2259, 0.2274, 0.2304, 0.2330])
         K           *= (10**-3)
@@ -159,106 +144,96 @@ class Light():
         
         gdc         = interpolate.interp1d(spectrum, K)
         
-        wavelength          = np.linspace(int(lambdaLow), int(lambdaHigh), int((lambdaHigh-lambdaLow)/lambdaDisc))
-        spectralGDC         = gdc(wavelength)
+        wavelength  = np.linspace(int(lambdaLow), int(lambdaHigh), int((lambdaHigh-lambdaLow)/lambdaDisc))
+        spectralGDC = gdc(wavelength)
         
         self.GDC    = np.mean(spectralGDC)
         
-        
+# ------------------------------------------------------------------------ #
+# Light source's number of photons
+# ------------------------------------------------------------------------ #          
     def set_number_of_photons(self, num):
         self.numOfPhotons = num
 
-    def set_origin(self, wingMesh):
-        edge = vtk.vtkFeatureEdges()
-        edge.SetInputData(self.surfOfProj)
-        edge.FeatureEdgesOff()
-        edge.NonManifoldEdgesOff()
-        edge.Update()
-        # # # boundProj = pv.PolyData(edge.GetOutput()).delaunay_2d()
+# ------------------------------------------------------------------------ #
+# Light source's direction
+# ------------------------------------------------------------------------ #          
+    def set_direction(self, wingMesh, sunAzimuth, sunElevation, sunRange):
+        # Onera M6-wing's quarter-chord line
+        cr4                 = np.array([0.201475, 0,      0])
+        ct4                 = np.array([0.803905, 1.1963, 0])
         
+        # Rotation matrix
+        rotZ                = np.array([[np.cos(sunAzimuth*np.pi/180.0), -np.sin(sunAzimuth*np.pi/180.0),0], [np.sin(sunAzimuth*np.pi/180.0), np.cos(sunAzimuth*np.pi/180.0),0], [0,0,1]])
+        rotX                = np.array([[1,0,0], [0,np.cos(sunElevation*np.pi/180.0), -np.sin(sunElevation*np.pi/180.0)],[0,np.sin(sunElevation*np.pi/180.0), np.cos(sunElevation*np.pi/180.0)]])
+
+        # Rotate quarter-chord line
+        aziRot              = np.matmul(rotZ, ct4-cr4)+cr4
+        elevRot             = np.matmul(rotX, aziRot-cr4)+cr4
+
+        # Illumination direction
+        self.direction      = (cr4-elevRot)/np.linalg.norm(cr4-elevRot)
+        
+        # Wing's projection surface in the illumination direction
+        self.dirOfProj      = -self.direction
+        self.orgOfProj      = wingMesh.grid.center + sunRange*self.dirOfProj
+        self.surfOfProj     = pv.PolyData(wingMesh.grid.points).project_points_to_plane(origin=self.orgOfProj, normal=self.dirOfProj).delaunay_2d()
+        self.areaOfProj     = self.surfOfProj.area
+      
+# ------------------------------------------------------------------------ #
+# Light source's origin(s)
+# ------------------------------------------------------------------------ #          
+    def set_origin(self, wingMesh):
+
+        # Create a plane discretised with the required number of points = no. of photons at the center of the wing
+        res     = int(np.floor(np.sqrt(self.numOfPhotons)))
+        plane   = pv.Plane(center=wingMesh.grid.center, direction=[0,0,1], i_size=1.2, j_size=1.2, i_resolution=res, j_resolution=res)
+        
+        # Slice wing with the plane
         geomFilter = vtk.vtkGeometryFilter()
         geomFilter.SetInputData(wingMesh.grid)
         geomFilter.Update()
-        
-        # res = int(np.floor(np.sqrt(self.numOfPhotons)))
-        # inProj = pv.PolyData()
-        # while (inProj.points.shape[0] < self.numOfPhotons):
-            # plane = pv.Plane(center=wingMesh.grid.center, direction=[0,0,1], i_size=1.2, j_size=1.2, i_resolution=res, j_resolution=res)
-            # plane.compute_implicit_distance(geomFilter.GetOutput(), inplace=True)
-        
-            # inner   = pv.PolyData(plane.points[np.argwhere(plane['implicit_distance'] < 0),:])
-            # inProj  = inner.project_points_to_plane(origin=self.orgOfProj, normal=self.dirOfProj)
-            
-            # res += 10
-        
-        res     = int(np.floor(np.sqrt(self.numOfPhotons)))
-        plane   = pv.Plane(center=wingMesh.grid.center, direction=[0,0,1], i_size=1.2, j_size=1.2, i_resolution=res, j_resolution=res)
         plane.compute_implicit_distance(geomFilter.GetOutput(), inplace=True)
         inner   = pv.PolyData(plane.points[np.argwhere(plane['implicit_distance'] < 0)[:,0],:])
+        
+        # Project intersection of plane with wign to the origin and direction of illumination
         inProj  = inner.project_points_to_plane(origin=self.orgOfProj, normal=self.dirOfProj)
         
-            
-
+        # Photons' origins and direction
         self.photonsOrg = inProj.points
         self.photonsDir = np.ones((inProj.points.shape[0], inProj.points.shape[1]))*self.direction
         
+        # Visualisation
+        # edge = vtk.vtkFeatureEdges()
+        # edge.SetInputData(self.surfOfProj)
+        # edge.FeatureEdgesOff()
+        # edge.NonManifoldEdgesOff()
+        # edge.Update()
         
         # mesh  = pv.StructuredGrid(self.photonsOrg[:,0],self.photonsOrg[:,1],self.photonsOrg[:,2])
         # mesh["direction"] = self.photonsDir
         # mesh["magnitude"] = np.ones((inProj.points.shape[0]))*0.1
         # glyphs = mesh.glyph(orient="direction", scale="magnitude", geom=pv.Arrow(shaft_radius=0.01, tip_radius=0.03, tip_length=0.2, tip_resolution=100))
        
-        # plotter = pv.Plotter(window_size=[600,600])
-        # plotter.add_mesh(glyphs, color="red")
-        # plotter.add_mesh(wingMesh.grid, color="white", lighting=True, diffuse=0.0, specular=0.8, specular_power=0.5, smooth_shading=True)
-        # plotter.add_mesh(self.surfOfProj, color='red', show_edges=False, opacity=0.3)
-        # plotter.add_mesh(pv.PolyData(self.photonsOrg), color='red', render_points_as_spheres=True)
-        # plotter.add_sphere_widget(grid, center=(-2,2,0.5), radius=1, theta_resolution=100, phi_resolution=100, color='yellow')
-        # plotter.add_axes(color='black', interactive=True)
-        # plotter.set_background('white')
-        # plotter.show(interactive=True, auto_close=False)
-        # plotter.save_graphic('light_source_arrangement.svg', raster=True, painter=True)
-        # pdb.set_trace()
-
-        
-    def set_direction(self, wingMesh, sunAzimuth, sunElevation, sunRange):
-        cr4 = np.array([0.201475, 0,      0])
-        ct4 = np.array([0.803905, 1.1963, 0])
-        
-
-        rotZ = np.array([[np.cos(sunAzimuth*np.pi/180.0), -np.sin(sunAzimuth*np.pi/180.0),0], [np.sin(sunAzimuth*np.pi/180.0), np.cos(sunAzimuth*np.pi/180.0),0], [0,0,1]])
-        rotX = np.array([[1,0,0], [0,np.cos(sunElevation*np.pi/180.0), -np.sin(sunElevation*np.pi/180.0)],[0,np.sin(sunElevation*np.pi/180.0), np.cos(sunElevation*np.pi/180.0)]])
-
-        aziRot      = np.matmul(rotZ, ct4-cr4)+cr4
-        elevRot     = np.matmul(rotX, aziRot-cr4)+cr4
-
-        self.direction  = (cr4-elevRot)/np.linalg.norm(cr4-elevRot)
-        
-        self.dirOfProj       = -self.direction
-        self.orgOfProj       = wingMesh.grid.center + sunRange*self.dirOfProj
-        
-        
-        self.surfOfProj         = pv.PolyData(wingMesh.grid.points).project_points_to_plane(origin=self.orgOfProj, normal=self.dirOfProj).delaunay_2d()
-        self.areaOfProj         = self.surfOfProj.area
-        
-        # pdb.set_trace()
         # plotter = pv.Plotter()
-        # plotter.add_mesh(wingMesh.grid, color='green', opacity=0.2)
-        # plotter.add_mesh(pv.PolyData(cr4), color='red', render_points_as_spheres=True)
-        # plotter.add_mesh(pv.PolyData(ct4), color='red', render_points_as_spheres=True)
-        # plotter.add_mesh(pv.PolyData(aziRot), color='green', render_points_as_spheres=True)
-        # plotter.add_mesh(pv.PolyData(elevRot), color='blue', render_points_as_spheres=True)
-        # plotter.add_mesh(pv.Arrow(start=elevRot, direction=self.direction), color='blue')
+        # plotter.add_mesh(glyphs, color="yellow")
+        # plotter.add_mesh(wingMesh.grid, color='green', opacity=0.3)
+        # plotter.add_mesh(pv.PolyData(edge.GetOutput()), color='magenta', show_edges=True)
+        # plotter.add_mesh(pv.PolyData(self.photonsOrg), color='blue', show_edges=True)
         # plotter.set_background('white')
-        # plotter.add_axes(color='black')
         # plotter.show()
-        # pdb.set_trace()        
-
+        # pdb.set_trace()
+# ------------------------------------------------------------------------ #
+# Single light ray origin and direction
+# ------------------------------------------------------------------------ #       
     def set_primary_ray(self, origin, direction):
         self.set_number_of_photons(1)
         self.photonsOrg = origin
         self.photonsDir = direction
 
+# ------------------------------------------------------------------------ #
+# Add traced light ray to photon map
+# ------------------------------------------------------------------------ #       
     def add_photon_to_map(self, pos, dir, pow, normal):
         buff                = pv.PolyData(pos)
         buff['Direction']   = dir.reshape((1,3))
@@ -271,9 +246,3 @@ class Light():
         apd.Update()
         
         self.photonMap = pv.PolyData(apd.GetOutput())
-        
-    def set_photon_map(self, photonMap):
-        self.photonMap          = pv.PolyData(photonMap)
-        self.kdTreePhotonMap    = vtk.vtkKdTreePointLocator()
-        self.kdTreePhotonMap.SetDataSet(self.photonMap)
-        self.kdTreePhotonMap.BuildLocator()
