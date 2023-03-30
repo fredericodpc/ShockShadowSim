@@ -156,7 +156,7 @@ def get_light_intersection(photonMapDict, sol):
 # ------------------------------------------------------------------------ #
 # (System of) ODE(s) solution 
 # ------------------------------------------------------------------------ #
-def nonlinear_ray_trace(photonMapDict, initialState, plotter):
+def nonlinear_ray_trace(photonMapDict, initialState):
     # Solve ODE
     sol = solve_ivp(fun=ray_ode, t_span=[0,10], y0=initialState, method='DOP853', dense_output=True, first_step=0.1, max_step=0.1, rtol=1*(10**-6), atol=1*(10**-6), events=wing_hit)
     
@@ -207,27 +207,27 @@ wingMesh.build_obb_tree()
 # ------------------------------------------------------------------------ #
 light = Light.Light()
 
+# Number of photons
+lsNumOfPhotons    = 1000
+light.set_number_of_photons(lsNumOfPhotons)
+
 # Position and Direction
 lsType          = 'sun'
-lsazimuth         = 30
+lsAzimuth         = 30
 lsElevation       = 90
 lsRange           = 1
 light.set_direction(wingMesh, lsAzimuth, lsElevation, lsRange)
 light.set_origin(wingMesh)
 
-# Number of photons
-lsNumOfPhotons    = 100
-light.set_number_of_photons(lsNumOfPhotons)
-
 # Spectrum
 lsSpectrumBin     = [380, 780]
 lsSpectrumDisc    = 1
-light.set_total_rgb_power(type=lsType, lambdaLow=lsSpectrumBin[0], lambdaHigh=lsSectrumBin[1], lsSpectrumDisc=1)
+light.set_total_rgb_power(type=lsType, lambdaLow=lsSpectrumBin[0], lambdaHigh=lsSpectrumBin[1], lambdaDisc=lsSpectrumDisc)
 
 # ------------------------------------------------------------------------ #
 # Fluid-Light Relationship
 # ------------------------------------------------------------------------ #
-light.set_gladstone_dale_constant(lambdaLow=lsSpectrumBin[0], lambdaHigh=lsSectrumBin[1], lsSpectrumDisc=1)
+light.set_gladstone_dale_constant(lambdaLow=lsSpectrumBin[0], lambdaHigh=lsSpectrumBin[1], lambdaDisc=lsSpectrumDisc)
 fluidMesh.compute_index_of_refraction(light.GDC)
 
 # ------------------------------------------------------------------------ #
@@ -306,8 +306,8 @@ for i in range(light.photonsOrg.shape[0]):
         
         # Nonlinear Ray Trace
         initialState    = (light.photonsOrg[i,0], light.photonsOrg[i,1], light.photonsOrg[i,2], light.photonsDir[i,0], light.photonsDir[i,1], light.photonsDir[i,2])
-        nonlinear_ray_trace(photonMapDict, initialState, plotter)
-
+        nonlinear_ray_trace(photonMapDict, initialState)
+pdb.set_trace()
 # ------------------------------------------------------------------------ #
 # Save illumination photon map
 # ------------------------------------------------------------------------ #

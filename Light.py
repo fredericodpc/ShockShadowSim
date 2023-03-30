@@ -184,15 +184,21 @@ class Light():
 # Light source's origin(s)
 # ------------------------------------------------------------------------ #          
     def set_origin(self, wingMesh):
-
+        edge = vtk.vtkFeatureEdges()
+        edge.SetInputData(self.surfOfProj)
+        edge.FeatureEdgesOff()
+        edge.NonManifoldEdgesOff()
+        edge.Update()
+        
+        geomFilter = vtk.vtkGeometryFilter()
+        geomFilter.SetInputData(wingMesh.grid)
+        geomFilter.Update()
+        
         # Create a plane discretised with the required number of points = no. of photons at the center of the wing
         res     = int(np.floor(np.sqrt(self.numOfPhotons)))
         plane   = pv.Plane(center=wingMesh.grid.center, direction=[0,0,1], i_size=1.2, j_size=1.2, i_resolution=res, j_resolution=res)
         
         # Slice wing with the plane
-        geomFilter = vtk.vtkGeometryFilter()
-        geomFilter.SetInputData(wingMesh.grid)
-        geomFilter.Update()
         plane.compute_implicit_distance(geomFilter.GetOutput(), inplace=True)
         inner   = pv.PolyData(plane.points[np.argwhere(plane['implicit_distance'] < 0)[:,0],:])
         
@@ -204,11 +210,7 @@ class Light():
         self.photonsDir = np.ones((inProj.points.shape[0], inProj.points.shape[1]))*self.direction
         
         # Visualisation
-        # edge = vtk.vtkFeatureEdges()
-        # edge.SetInputData(self.surfOfProj)
-        # edge.FeatureEdgesOff()
-        # edge.NonManifoldEdgesOff()
-        # edge.Update()
+
         
         # mesh  = pv.StructuredGrid(self.photonsOrg[:,0],self.photonsOrg[:,1],self.photonsOrg[:,2])
         # mesh["direction"] = self.photonsDir
