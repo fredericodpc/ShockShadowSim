@@ -53,6 +53,15 @@ External libraries:
 - PyVista (VTK wrapper)
 - VTK
 
+Select desired number of photons and direction (azimuth, elevation and range) of the Sun:
+```
+# Number of photons
+lsNumOfPhotons    = 100
+# Position and Direction
+lsAzimuth         = 35
+lsElevation       = 90
+```
+Then simply run:
 ```
 python shockshadow_illumination_generator.py
 ```
