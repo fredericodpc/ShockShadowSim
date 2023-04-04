@@ -165,6 +165,16 @@ def nonlinear_ray_trace(photonMapDict, initialState):
         get_light_intersection(photonMapDict, sol)
 
     light.add_photon_to_map(photonMapDict['pos'], photonMapDict['dir'], photonMapDict['pow'], photonMapDict['normal'])
+
+# ------------------------------------------------------------------------ #
+# INPUT
+# ------------------------------------------------------------------------ #
+# Number of photons
+lsNumOfPhotons    = 100
+# Position and Direction
+lsAzimuth         = 35
+lsElevation       = 90
+lsRange           = 1
     
 # ------------------------------------------------------------------------ #
 # CFD Mesh and Data
@@ -211,14 +221,10 @@ wingMesh.build_obb_tree()
 light = Light.Light()
 
 # Number of photons
-lsNumOfPhotons    = 100
 light.set_number_of_photons(lsNumOfPhotons)
 
 # Position and Direction
 lsType          = 'sun'
-lsAzimuth         = 30
-lsElevation       = 90
-lsRange           = 1
 light.set_direction(wingMesh, lsAzimuth, lsElevation, lsRange)
 light.set_origin(wingMesh)
 
