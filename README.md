@@ -1,16 +1,19 @@
 # Simulation of Observable In-Flight Shockwave Shadows
 
 ## About
-This repository contains parts of the research work performed by Dr Frederico Paulino for his PhD thesis at University of Bristol, a Industrial Cooperative Awards in Science & Technology (iCASE) project sponsored by the Engineering and Physical Sciences Research Council (EPSRC) and Airbus.
+This repository contains parts of the research work performed by Dr Frederico Paulino for his PhD thesis at University of Bristol, Bristol UK, within a Industrial Cooperative Awards in Science & Technology (iCASE) project sponsored by Airbus and the Engineering and Physical Sciences Research Council (EPSRC).
 
 [PhD Thesis](https://research-information.bris.ac.uk/en/studentTheses/simulation-of-observable-in-flight-shockwave-shadows)
 
+---
 ## Introduction
 A *shock wave* occurs when matter, irrespective of the state, undergoes a rapid compression. Shock waves delimit a three-dimensional boundary across which an abrupt variation of the thermodynamic properties of the medium is observed, including density. This discontinuity propagates in space with supersonic speeds.
 
 Settles [2] noted that a typical shock wave encountered in compressible flow, travelling just over the sonic speed, induces a very small variation of around $10^{-5}$ in the refractive index of air due to its characteristic density gradient. This inhomogeneity in the optical medium in turn causes the refraction of light and a deflection of only approximately $10^{-3}$ degrees or less [2]. Although such a weak discontinuity and small light bending are usually invisible to the naked eye, the light displacement, deviation and interference resulting from the interaction with compressible flow features can be very pronounced. The outcome is that image features associate with shock waves can occur naturally, when the conditions are right and 'one knows where and how to look' [2]. 
 
 The diverging high intensity light that is emitted from the sun, which after travelling a very long distance arrives at the earth as a parallel beam, can serve as an appropriate light source to generate direct natural shadowgraphs. These shadowgraphs of a refractive index field can be cast on any approximately flat and diffuse surface [2]. These days airline passengers can often see this shadow and caustic (envelope of refracted rays [3]) pattern [4] over the wing when the Sun is approximately overhead [2]. However, what is visible from the airborne perspective is completely dependent on the particular vehicle operation, illumination, observer and recording conditions.
+
+![alt text](https://github.com/fredericodpc/ShockShadowSim/blob/main/research/figures/synthetic_shockshadow.png "Test")
 
 ---
 ## Motivation
