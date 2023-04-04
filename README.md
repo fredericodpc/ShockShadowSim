@@ -12,7 +12,7 @@ Settles [2] noted that a typical shock wave encountered in compressible flow, tr
 
 The diverging high intensity light that is emitted from the sun, which after travelling a very long distance arrives at the earth as a parallel beam, can serve as an appropriate light source to generate direct natural shadowgraphs. These shadowgraphs of a refractive index field can be cast on any approximately flat and diffuse surface [2]. These days airline passengers can often see this shadow and caustic (envelope of refracted rays [3]) pattern [4] over the wing when the Sun is approximately overhead [2]. However, what is visible from the airborne perspective is completely dependent on the particular vehicle operation, illumination, observer and recording conditions.
 
-![alt text](https://github.com/fredericodpc/ShockShadowSim/blob/main/research/figures/natural_shockshadow.png "Natural Shockshadow")
+![alt text](https://github.com/fredericodpc/ShockShadowSim/blob/main/research/figures/natural_shockshadow.svg "Natural Shockshadow")
 
 ## Motivation
 
@@ -30,6 +30,8 @@ A computationally simulated shockshadow can then be used to:
 
 ## Light Simulation Framework
 
+![alt text](https://github.com/fredericodpc/ShockShadowSim/blob/main/research/figures/light_simulation_framework.svg "Light Simulation Framework")
+
 Module | Model(s)
 --- | ---
 Fluid Flow | Transonic flow over the Onera M6-Wing with OpenFoam
@@ -40,7 +42,8 @@ Light reflection | Lambertian material
 Viewing | Virtual pinhole camera
 Image synthesis | Rendering equation + Photon Mapping + Epanechnikov Kernel
 
-![alt text](https://github.com/fredericodpc/ShockShadowSim/blob/main/research/figures/synthetic_shockshadow.png "Synthetic Shockshadow")
+![alt text](https://github.com/fredericodpc/ShockShadowSim/blob/main/research/figures/onera_m6_cfd.svg "Onera M6-Wing CFD")
+![alt text](https://github.com/fredericodpc/ShockShadowSim/blob/main/research/figures/synthetic_shockshadow.svg "Synthetic Shockshadow")
 
 ## Running instructions
 
